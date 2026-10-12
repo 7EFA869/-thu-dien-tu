@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Hộp thư – Tạo thư điện tử</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro&family=Caveat&family=Dancing+Script&family=Great+Vibes&family=Lobster&family=Lora&family=Pacifico&family=Patrick+Hand&family=Playfair+Display&display=swap">
+<style>
+:root{--bg:#f4efe6;--ink:#2b2622;--card:#fffdf8;--line:#d9cfbd;--acc:#9c4a3a}
+@media (prefers-color-scheme:dark){:root{--bg:#1d1a17;--ink:#eee6d8;--card:#2a2622;--line:#4a423a;--acc:#e0866f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Be Vietnam Pro',system-ui,sans-serif}
+h1{font-family:'Playfair Display',serif;margin:0;font-size:1.4rem}
+header{padding:16px 20px;border-bottom:1px solid var(--line)}
+main{max-width:1000px;margin:0 auto;padding:16px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+input[type=text],select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;max-width:100%}
+button{padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+button:disabled{opacity:.5}
+.tabs{display:flex;gap:6px;overflow-x:auto}
+.tabs button.on{background:var(--ink);color:var(--bg)}
+.wrap{overflow-x:auto}
+.paper{position:relative;width:560px;max-width:100%;aspect-ratio:210/297;margin:0 auto;border:1px solid var(--line);border-radius:4px;box-shadow:0 6px 24px #0003;overflow:hidden;color:#2b2622}
+.paper textarea,.paper .txt{position:absolute;inset:0;width:100%;height:100%;padding:11% 10%;border:0;background:transparent;resize:none;outline:none;font-size:20px;line-height:1.6;color:#2b2622;white-space:pre-wrap;overflow:hidden;z-index:1}
+.paper .txt{pointer-events:none}
+.deco{position:absolute;z-index:2;touch-action:none;user-select:none}
+.deco img{width:100%;display:block;pointer-events:none;border-radius:3px}
+.deco.sel{outline:2px dashed var(--acc);cursor:move}
+.hint{font-size:.85rem;opacity:.7;margin:8px 0}
+.res{margin-top:14px;padding:14px;border:1px solid var(--acc);border-radius:10px;background:var(--card)}
+.res code{display:block;word-break:break-all;margin:8px 0;padding:8px;background:var(--bg);border-radius:6px}
+.nav{display:flex;justify-content:center;gap:12px;align-items:center;margin:14px 0}
+.hide{display:none}
+</style></head><body>
+<header><h1>✉️ Hộp thư</h1></header>
+<main>
+<section id="edit">
+ <div class="bar">
+  <input type="text" id="title" placeholder="Tiêu đề thư" maxlength="80" style="flex:1;min-width:160px">
+  <select id="font"></select>
+  <select id="color"><option value="#fffdf8">Giấy trắng ngà</option><option value="#fbe9e7">Hồng nhạt</option><option value="#e8f1e4">Xanh lá nhạt</option><option value="#e6eef8">Xanh trời nhạt</option><option value="#f5e6c8">Giấy cũ</option></select>
+ </div>
+ <div class="bar"><div class="tabs" id="tabs"></div><button id="addPage">+ Thêm trang</button><button id="delPage">Xóa trang</button></div>
+ <div class="bar"><button id="addImg">🖼️ Thêm ảnh</button><input type="file" id="file" accept="image/*" class="hide"><button id="big" class="hide">＋</button><button id="small" class="hide">－</button><button id="rm" class="hide">✕ Xóa ảnh</button></div>
+ <div class="wrap"><div class="paper" id="paper"><textarea id="ta" placeholder="Viết thư của bạn ở đây..."></textarea></div></div>
+ <p class="hint">Chọn ảnh rồi kéo để di chuyển; dùng ＋ / － để đổi cỡ. Mỗi trang có font và màu giấy riêng.</p>
+ <button class="pri" id="make">✨ Tạo thư &amp; lấy link</button>
+ <div class="res hide" id="res"></div>
+</section>
+<section id="view" class="hide">
+ <h1 id="vt" style="text-align:center;margin-bottom:12px"></h1>
+ <div class="wrap"><div class="paper" id="vp"></div></div>
+ <div class="nav"><button id="prev">‹</button><span id="pn"></span><button id="next">›</button></div>
+ <p style="text-align:center"><a href="/"><button>Viết thư mới</button></a></p>
+</section>
+</main>
+<script>
+const FONTS=[["Be Vietnam Pro","Be Vietnam Pro (hiện đại)"],["Lora","Lora (cổ điển)"],["Playfair Display","Playfair Display (sang trọng)"],["Dancing Script","Dancing Script (bay bổng)"],["Great Vibes","Great Vibes (thư pháp)"],["Caveat","Caveat (viết tay)"],["Patrick Hand","Patrick Hand (nét tay)"],["Pacifico","Pacifico (vui tươi)"],["Lobster","Lobster (đậm nét)"]];
+const $=id=>document.getElementById(id);
+let pages=[{text:"",font:FONTS[0][0],color:"#fffdf8",imgs:[]}],cur=0,sel=-1;
+$("font").innerHTML=FONTS.map(f=>`<option value="${f[0]}">${f[1]}</option>`).join("");
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function render(){
+ const p=pages[cur];
+ $("tabs").innerHTML=pages.map((_,i)=>`<button class="${i==cur?'on':''}" data-i="${i}">Trang ${i+1}</button>`).join("");
+ $("ta").value=p.text;$("ta").style.fontFamily=`'${p.font}',cursive,serif`;
+ $("font").value=p.font;$("color").value=p.color;$("paper").style.background=p.color;
+ $("paper").querySelectorAll(".deco").forEach(e=>e.remove());
+ p.imgs.forEach((im,i)=>{
+  const d=document.createElement("div");d.className="deco"+(i==sel?" sel":"");
+  d.style.cssText=`left:${im.x}%;top:${im.y}%;width:${im.w}%`;
+  const img=document.createElement("img");img.src=im.src;img.alt="";d.appendChild(img);
+  d.onpointerdown=e=>{sel=i;const r=$("paper").getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ox=im.x,oy=im.y;
+   d.setPointerCapture(e.pointerId);
+   d.onpointermove=m=>{im.x=Math.max(-10,Math.min(95,ox+(m.clientX-sx)/r.width*100));im.y=Math.max(-10,Math.min(95,oy+(m.clientY-sy)/r.height*100));d.style.left=im.x+"%";d.style.top=im.y+"%"};
+   d.onpointerup=()=>{d.onpointermove=null};
+   document.querySelectorAll(".deco").forEach(x=>x.classList.remove("sel"));d.classList.add("sel");tools(true)};
+  $("paper").appendChild(d);
+ });
+ tools(sel>=0);
+}
+function tools(on){["big","small","rm"].forEach(i=>$(i).classList.toggle("hide",!on))}
+$("tabs").onclick=e=>{const i=e.target.dataset.i;if(i!=null){cur=+i;sel=-1;render()}};
+$("addPage").onclick=()=>{if(pages.length>=12)return alert("Tối đa 12 trang");const l=pages[cur];pages.push({text:"",font:l.font,color:l.color,imgs:[]});cur=pages.length-1;sel=-1;render()};
+$("delPage").onclick=()=>{if(pages.length<2)return;pages.splice(cur,1);cur=Math.max(0,cur-1);sel=-1;render()};
+$("ta").oninput=e=>{pages[cur].text=e.target.value};
+$("font").onchange=e=>{pages[cur].font=e.target.value;render()};
+$("color").onchange=e=>{pages[cur].color=e.target.value;render()};
+$("big").onclick=()=>{pages[cur].imgs[sel].w=Math.min(100,pages[cur].imgs[sel].w+6);render()};
+$("small").onclick=()=>{pages[cur].imgs[sel].w=Math.max(8,pages[cur].imgs[sel].w-6);render()};
+$("rm").onclick=()=>{pages[cur].imgs.splice(sel,1);sel=-1;render()};
+$("addImg").onclick=()=>$("file").click();
+/* Nén ảnh: tối đa 700px, JPEG chất lượng 0.65 */
+function compress(file){return new Promise((ok,bad)=>{
+ const u=URL.createObjectURL(file),im=new Image();
+ im.onload=()=>{const s=Math.min(1,700/Math.max(im.width,im.height)),c=document.createElement("canvas");
+  c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
+  const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+  URL.revokeObjectURL(u);ok(c.toDataURL("image/jpeg",.65))};
+ im.onerror=()=>bad(new Error("Không đọc được ảnh"));im.src=u})}
+$("file").onchange=async e=>{
+ const f=e.target.files[0];e.target.value="";if(!f)return;
+ if(pages[cur].imgs.length>=8)return alert("Tối đa 8 ảnh mỗi trang");
+ try{const src=await compress(f);pages[cur].imgs.push({src,x:20,y:50,w:40});sel=pages[cur].imgs.length-1;render()}
+ catch(err){alert(err.message)}};
+$("make").onclick=async()=>{
+ if(!pages.some(p=>p.text.trim()||p.imgs.length))return alert("Thư đang trống.");
+ $("make").disabled=true;$("make").textContent="Đang tạo...";
+ try{
+  const r=await fetch("/api/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:$("title").value,pages})});
+  const d=await r.json();if(!r.ok)throw new Error(d.error||"Lỗi");
+  const link=location.origin+"/thu/"+d.id;
+  $("res").classList.remove("hide");
+  $("res").innerHTML=`<b>Thư đã được tạo!</b><code>${esc(link)}</code><button id="cp">Sao chép link</button> <a href="${esc(link)}" target="_blank"><button>Mở thư</button></a><p class="hint">Mỗi thư có một link riêng, chứa mã ngẫu nhiên không thể đoán. Ai có link đều xem được.</p>`;
+  $("cp").onclick=()=>navigator.clipboard.writeText(link).then(()=>$("cp").textContent="Đã chép ✓").catch(()=>{});
+ }catch(err){alert("Không tạo được thư: "+err.message)}
+ $("make").disabled=false;$("make").textContent="✨ Tạo thư & lấy link"};
+/* Xem thư */
+let L=null,vi=0;
+function showView(){
+ const p=L.pages[vi];$("vt").textContent=L.title;document.title=L.title;
+ const vp=$("vp");vp.style.background=/^#[0-9a-fA-F]{6}$/.test(p.color)?p.color:"#fffdf8";vp.innerHTML="";
+ const t=document.createElement("div");t.className="txt";t.style.fontFamily=`'${p.font}',cursive,serif`;t.textContent=p.text;vp.appendChild(t);
+ p.imgs.forEach(i=>{if(!/^data:image\/jpeg;base64,/.test(i.src))return;
+  const d=document.createElement("div");d.className="deco";d.style.cssText=`left:${+i.x}%;top:${+i.y}%;width:${+i.w}%`;
+  const im=document.createElement("img");im.src=i.src;im.alt="";d.appendChild(im);vp.appendChild(d)});
+ $("pn").textContent=`Trang ${vi+1} / ${L.pages.length}`;
+}
+$("prev").onclick=()=>{if(vi>0){vi--;showView()}};
+$("next").onclick=()=>{if(L&&vi<L.pages.length-1){vi++;showView()}};
+(async()=>{
+ const m=location.pathname.match(/^\/thu\/([A-Za-z0-9_-]+)\/?$/);
+ if(!m){render();return}
+ $("edit").classList.add("hide");$("view").classList.remove("hide");$("vt").textContent="Đang mở thư...";
+ try{const r=await fetch("/api/letter?id="+m[1]);if(!r.ok)throw 0;L=await r.json();showView()}
+ catch(e){$("vt").textContent="Không tìm thấy thư này.";$("vp").classList.add("hide")}
+})();
+</script></body></html>
