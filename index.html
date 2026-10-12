@@ -2,7 +2,7 @@
 <html lang="vi"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Hộp thư – Tạo thư điện tử</title>
+<title>Lettersforyou</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro&family=Caveat&family=Dancing+Script&family=Great+Vibes&family=Lobster&family=Lora&family=Pacifico&family=Patrick+Hand&family=Playfair+Display&display=swap">
 <style>
 :root{--bg:#f4efe6;--ink:#2b2622;--card:#fffdf8;--line:#d9cfbd;--acc:#9c4a3a}
@@ -32,7 +32,7 @@ button:disabled{opacity:.5}
 .nav{display:flex;justify-content:center;gap:12px;align-items:center;margin:14px 0}
 .hide{display:none}
 </style></head><body>
-<header><h1>✉️ Hộp thư</h1></header>
+<header><h1>Hộp thư</h1></header>
 <main>
 <section id="edit">
  <div class="bar">
@@ -41,10 +41,10 @@ button:disabled{opacity:.5}
   <select id="color"><option value="#fffdf8">Giấy trắng ngà</option><option value="#fbe9e7">Hồng nhạt</option><option value="#e8f1e4">Xanh lá nhạt</option><option value="#e6eef8">Xanh trời nhạt</option><option value="#f5e6c8">Giấy cũ</option></select>
  </div>
  <div class="bar"><div class="tabs" id="tabs"></div><button id="addPage">+ Thêm trang</button><button id="delPage">Xóa trang</button></div>
- <div class="bar"><button id="addImg">🖼️ Thêm ảnh</button><input type="file" id="file" accept="image/*" class="hide"><button id="big" class="hide">＋</button><button id="small" class="hide">－</button><button id="rm" class="hide">✕ Xóa ảnh</button></div>
+ <div class="bar"><button id="addImg">Thêm ảnh</button><input type="file" id="file" accept="image/*" class="hide"><button id="big" class="hide">＋</button><button id="small" class="hide">－</button><button id="rm" class="hide">✕ Xóa ảnh</button></div>
  <div class="wrap"><div class="paper" id="paper"><textarea id="ta" placeholder="Viết thư của bạn ở đây..."></textarea></div></div>
- <p class="hint">Chọn ảnh rồi kéo để di chuyển; dùng ＋ / － để đổi cỡ. Mỗi trang có font và màu giấy riêng.</p>
- <button class="pri" id="make">✨ Tạo thư &amp; lấy link</button>
+ <p class="hint"></p>
+ <button class="pri" id="make"> Tạo thư &amp; lấy link</button>
  <div class="res hide" id="res"></div>
 </section>
 <section id="view" class="hide">
